@@ -1,0 +1,55 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Image Gallery</title>
+</head>
+
+<body>
+    <div id="tag-list"></div>
+    <div id="image-gallery"></div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Fetch initial data
+            fetchTags();
+            fetchImages();
+
+            // Fetch and display tags
+            function fetchTags() {
+                $.get('/images/tags', function (tags) {
+                    const tagList = $('#tag-list');
+                    tagList.empty();
+                    tags.forEach(tag => {
+                        tagList.append(`<button class="tag" data-tag="${tag}">${tag}</button>`);
+                    });
+
+                    // Add click event to tags for filtering
+                    $('.tag').click(function () {
+                        const selectedTag = $(this).data('tag');
+                        fetchImages(selectedTag);
+                    });
+                });
+            }
+
+            // Fetch and display images
+            function fetchImages(tag = null) {
+                $.get('/images', function (images) {
+                    const imageGallery = $('#image-gallery');
+                    imageGallery.empty();
+                    images.forEach(image => {
+                        if (!tag || image.tags.includes(tag)) {
+                            imageGallery.append(`<img src="${image.url}" alt="${image.tags.join(', ')}">`);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>
