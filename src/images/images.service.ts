@@ -18,11 +18,13 @@ export class ImagesService {
 
   async uploadImage(image: Express.Multer.File, tags: string) {
     let filename = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    console.log(tags)
     const tagNames = tags.split(',').map(tag => tag.trim());
 
     // Find or create tags and associate with the image
     const tagData = await Promise.all(tagNames.map(tagName => this.tagService.findOrCreateTag(tagName)));
-    const imageobj: Partial<Image>= {
+    console.log(tagData.map(tag => tag._id))
+    const imageobj= {
       filename: filename,
       originalname: image.originalname,
       size: image.size,
@@ -31,9 +33,11 @@ export class ImagesService {
       image.originalname?.match(constants.GET_FILE_EXTENSION)?.[0] || '',
       tags: tagData.map(tag => tag._id),
     };
+    console.log(imageobj)
     let fileDoc = await this.imageModel
       .create(imageobj)
-      .then(async (fileData: Image) => {        
+      .then(async (fileData: Image) => {   
+        console.log("fileData",fileData)     
         if (
           saveFileToDisk(
             constants.OTHER_ASSET,
@@ -57,10 +61,10 @@ export class ImagesService {
   }
 
   async findAll(filter, limit, skip, sortQuery) {
-    return this.imageModel.find(filter).sort(sortQuery).skip(skip).limit(limit);
+    return this.imageModel.find(filter).populate('tags').sort(sortQuery).skip(skip).limit(limit);
   }
 
   async findById(id: ObjectId) {
-    return this.imageModel.findById(id).lean();
+    return this.imageModel.findById(id).populate('tags').lean();
   }
 }
